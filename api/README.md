@@ -7,7 +7,6 @@ A FastAPI-based service for classifying articles based on their title and abstra
 - **Single Article Classification**: Classify individual articles with title and abstract
 - **Batch CSV Processing**: Process multiple articles from CSV files
 - **RESTful API**: Clean, documented API endpoints
-- **CLI Interface**: Command-line tools for easy interaction
 - **File Upload/Download**: Handle CSV file processing with automatic downloads
 
 ## Quick Start
@@ -25,10 +24,6 @@ pip install -r requirements.txt
 ### 2. Start the Server
 
 ```bash
-# Using the CLI
-python3 cli.py serve
-
-# Or directly with uvicorn
 uvicorn main:app --reload
 ```
 
@@ -83,34 +78,6 @@ Upload a CSV file with articles and get back a processed version with labels.
 
 Download a processed CSV file.
 
-## CLI Usage
-
-### Classify a Single Article
-
-```bash
-python3 cli.py classify-article \
-  --title "Machine Learning Applications" \
-  --abstract "This paper explores various applications of machine learning..."
-```
-
-### Process a CSV File
-
-```bash
-python3 cli.py classify-csv articles.csv --output processed_articles.csv
-```
-
-### Check API Health
-
-```bash
-python3 cli.py health-check
-```
-
-### Start Server
-
-```bash
-python3 cli.py serve --host 0.0.0.0 --port 8000 --reload
-```
-
 ## CSV Format
 
 Your CSV file should have the following columns:
@@ -137,7 +104,6 @@ api/
 ├── schemas.py           # Pydantic models
 ├── services.py          # Classification service
 ├── csv_processor.py     # CSV processing logic
-├── cli.py              # Command-line interface
 ├── pyproject.toml      # Project configuration
 └── README.md           # This file
 ```
