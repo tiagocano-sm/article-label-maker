@@ -12,7 +12,7 @@ class ArticleRequest(BaseModel):
 class ArticleResponse(BaseModel):
     """Schema for single article classification response"""
     title: str = Field(..., description="Article title")
-    labels: Dict[str, float] = Field(..., description="Classification labels with confidence scores")
+    labels: List[str] = Field(..., description="Classification labels")
 
 
 class CSVResponse(BaseModel):

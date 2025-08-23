@@ -24,6 +24,11 @@ pip install -r requirements.txt
 ### 2. Start the Server
 
 ```bash
+# Using uv (recommended)
+uv run uvicorn main:app --reload
+
+# Or activate the virtual environment first
+source .venv/bin/activate
 uvicorn main:app --reload
 ```
 
@@ -92,8 +97,8 @@ The processed CSV will include an additional `labels` column:
 
 ```csv
 title,abstract,labels
-"Article Title 1","Article abstract text...","deep_learning:0.892;computer_vision:0.756"
-"Article Title 2","Article abstract text...","machine_learning:0.734;statistics:0.623"
+"Article Title 1","Article abstract text...","deep_learning|computer_vision|machine_learning"
+"Article Title 2","Article abstract text...","machine_learning|statistics|data_science"
 ```
 
 ## Project Structure

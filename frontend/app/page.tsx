@@ -22,7 +22,8 @@ export default function ArticleLabelMaker() {
     title: "",
     abstract: "",
   })
-  const [csvBlob, setCsvBlob] = useState<Blob | null>(null)
+  const [csvResult, setCsvResult] = useState<{ filename: string; blob: Blob } | null>(null)
+  const [activeTab, setActiveTab] = useState("manual")
 
   const handleCsvFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -30,7 +31,7 @@ export default function ArticleLabelMaker() {
       setCsvFile(file)
       setCsvProcessed(false)
       setClassificationResult(null)
-      setCsvBlob(null)
+      setCsvResult(null)
     }
   }
 
@@ -39,11 +40,14 @@ export default function ArticleLabelMaker() {
       setIsProcessing(true)
       try {
         const response = await ApiService.classifyArticlesInCSV(csvFile)
-        setCsvBlob(response.blob)
+        // Download the processed file
+        const blob = await ApiService.downloadProcessedCSV(response.output_filename)
+        setCsvResult({ filename: response.output_filename, blob })
         setCsvProcessed(true)
       } catch (error) {
         console.error("Error processing CSV:", error)
-        // Handle error appropriately
+        console.error("Error details:", error)
+        alert(`Error processing CSV: ${error instanceof Error ? error.message : 'Unknown error'}`)
       } finally {
         setIsProcessing(false)
       }
@@ -62,7 +66,7 @@ export default function ArticleLabelMaker() {
         setClassificationResult(response)
       } catch (error) {
         console.error("Error classifying article:", error)
-        // Handle error appropriately
+        alert(`Error classifying article: ${error instanceof Error ? error.message : 'Unknown error'}`)
       } finally {
         setIsProcessing(false)
       }
@@ -70,11 +74,11 @@ export default function ArticleLabelMaker() {
   }
 
   const handleDownload = () => {
-    if (csvBlob) {
-      const url = URL.createObjectURL(csvBlob)
+    if (csvResult) {
+      const url = URL.createObjectURL(csvResult.blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = "labeled_articles.csv"
+      a.download = csvResult.filename
       a.click()
       URL.revokeObjectURL(url)
     }
@@ -112,7 +116,7 @@ export default function ArticleLabelMaker() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <Tabs defaultValue="csv" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-blue-50">
                   <TabsTrigger value="csv" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
                     CSV Upload
@@ -125,7 +129,64 @@ export default function ArticleLabelMaker() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="csv" className="space-y-4">
+                <TabsContent value="csv" className="space-y-6">
+                  {/* CSV Structure Information */}
+                  <Card className="border-blue-100 bg-gradient-to-r from-blue-50 to-teal-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-gray-800">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        CSV File Requirements
+                      </CardTitle>
+                      <CardDescription className="text-gray-700">
+                        Your CSV file must have exactly 2 columns with the following structure:
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="font-semibold text-blue-700 mb-2">Column 1: title</p>
+                            <p className="text-gray-600">Article title (required, cannot be empty)</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-blue-700 mb-2">Column 2: abstract</p>
+                            <p className="text-gray-600">Article abstract (required, cannot be empty)</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <p className="font-semibold text-gray-800 mb-2">Example CSV Structure:</p>
+                        <div className="bg-gray-50 rounded p-3 font-mono text-sm">
+                          <div className="text-blue-600">title,abstract</div>
+                          <div className="text-gray-700">"Deep Learning for Computer Vision","This paper presents..."</div>
+                          <div className="text-gray-700">"Machine Learning in Healthcare","This study investigates..."</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                          onClick={() => {
+                            const csvContent = 'title,abstract\n"Deep Learning for Computer Vision","This paper presents a novel approach to computer vision using deep learning techniques."\n"Machine Learning in Healthcare","This study investigates the use of machine learning algorithms for medical diagnosis."\n"Natural Language Processing","We explore the application of transformer models in NLP tasks."\n"Robotics Systems","We present a comprehensive framework for autonomous robotics."\n"Data Science in Finance","This research examines the application of data science techniques in financial markets."'
+                            const blob = new Blob([csvContent], { type: 'text/csv' })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = 'sample_articles.csv'
+                            a.click()
+                            URL.revokeObjectURL(url)
+                          }}
+                        >
+                          Download Sample CSV
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* File Upload Section */}
                   <div className="border-2 border-dashed border-blue-200 rounded-lg p-8 text-center bg-blue-50/30">
                     <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
                     <div className="space-y-2">
@@ -237,7 +298,7 @@ export default function ArticleLabelMaker() {
           </Card>
 
           {/* Results Section - Only show for manual input */}
-          {!csvFile && (isProcessing || classificationResult) && (
+          {activeTab === "manual" && (isProcessing || classificationResult) && (
             <Card className="shadow-lg border-green-100">
               <CardHeader className="bg-gradient-to-r from-green-50 to-blue-50">
                 <CardTitle className="text-gray-800">Classification Results</CardTitle>

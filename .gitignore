@@ -1,14 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+/*node_modules
+frontend/node_modules/
 
 # next.js
 /.next/
 /out/
+frontend/.next/
+frontend/out/
 
 # production
 /build
+frontend/build/
 
 # debug
 npm-debug.log*
@@ -25,3 +29,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Python / Backend
+api/__pycache__/
+api/*.pyc
+api/.venv/
+api/processed_csvs/
+api/.pytest_cache/
+api/.coverage
+api/htmlcov/

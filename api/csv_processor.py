@@ -33,36 +33,50 @@ class CSVProcessor:
             if missing_columns:
                 raise ValueError(f"Missing required columns: {missing_columns}")
             
-            # Convert DataFrame rows to ArticleRequest objects
+            # Convert DataFrame rows to ArticleRequest objects, filtering out empty titles/abstracts
             articles = []
-            for _, row in df.iterrows():
+            valid_indices = []
+            
+            for index, row in df.iterrows():
+                title = str(row['title']).strip()
+                abstract = str(row['abstract']).strip()
+                
+                # Skip rows with empty title or abstract
+                if not title or not abstract or title.lower() in ['nan', 'none', ''] or abstract.lower() in ['nan', 'none', '']:
+                    continue
+                
                 article = ArticleRequest(
-                    title=str(row['title']),
-                    abstract=str(row['abstract'])
+                    title=title,
+                    abstract=abstract
                 )
                 articles.append(article)
+                valid_indices.append(index)
             
             # Classify all articles
             classifications = self.classification_service.classify_articles_batch(articles)
             
-            # Add labels column to DataFrame
-            df['labels'] = [self._format_labels(classification.labels) for classification in classifications]
+            # Create a new DataFrame with only the required columns plus labels, using only valid rows
+            result_df = pd.DataFrame({
+                'title': df.loc[valid_indices, 'title'],
+                'abstract': df.loc[valid_indices, 'abstract'],
+                'labels': [self._format_labels(classification.labels) for classification in classifications]
+            })
             
             # Create output file
             output_path = self._create_output_file(file_path)
-            df.to_csv(output_path, index=False)
+            result_df.to_csv(output_path, index=False)
             
-            return output_path, len(df)
+            return output_path, len(articles)
             
         except Exception as e:
             raise Exception(f"Error processing CSV file: {str(e)}")
     
-    def _format_labels(self, labels: dict) -> str:
+    def _format_labels(self, labels: list) -> str:
         """
-        Format labels dictionary to string representation
+        Format labels list to string representation
         
         Args:
-            labels: Dictionary of label:confidence pairs
+            labels: List of label names
             
         Returns:
             Formatted string representation of labels
@@ -70,11 +84,7 @@ class CSVProcessor:
         if not labels:
             return ""
         
-        formatted_labels = []
-        for label, confidence in labels.items():
-            formatted_labels.append(f"{label}:{confidence}")
-        
-        return ";".join(formatted_labels)
+        return "|".join(labels)
     
     def _create_output_file(self, input_path: str) -> str:
         """

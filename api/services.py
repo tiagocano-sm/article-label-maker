@@ -29,7 +29,7 @@ class ClassificationService:
         
         return ArticleResponse(
             title=article.title,
-            labels=labels
+            labels=list(labels.keys())  # Convert to list of label names
         )
     
     def classify_articles_batch(self, articles: List[ArticleRequest]) -> List[ArticleResponse]:

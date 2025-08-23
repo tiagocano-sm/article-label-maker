@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import os
 from typing import List
@@ -20,6 +21,15 @@ app = FastAPI(
 # Initialize services
 classification_service = ClassificationService()
 csv_processor = CSVProcessor()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/", response_model=dict)
@@ -76,8 +86,10 @@ async def classify_articles_in_csv(file: UploadFile = File(...)):
             temp_file_path = temp_file.name
         
         try:
+            print(f"Processing CSV file: {temp_file_path}")
             # Process the CSV file
             output_path, processed_rows = csv_processor.process_csv(temp_file_path)
+            print(f"CSV processed successfully: {output_path}, {processed_rows} rows")
             
             return CSVResponse(
                 message="CSV processed successfully",
@@ -93,6 +105,9 @@ async def classify_articles_in_csv(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error in classify_articles_in_csv: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -128,15 +143,21 @@ async def health_check():
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
-    return ErrorResponse(
-        error=exc.detail,
-        detail=f"HTTP {exc.status_code} error"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "detail": f"HTTP {exc.status_code} error"
+        }
     )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
-    return ErrorResponse(
-        error="Internal server error",
-        detail=str(exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "detail": str(exc)
+        }
     )
