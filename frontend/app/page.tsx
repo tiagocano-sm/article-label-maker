@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Download, FileText, Stethoscope, CheckCircle } from "lucide-react"
+import { Upload, Download, FileText, Stethoscope, CheckCircle, BarChart3 } from "lucide-react"
 import { ApiService, type ClassifyArticleResponse } from "@/services/api"
+import { Dashboard } from "@/components/dashboard"
 
 export default function ArticleLabelMaker() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -23,7 +24,7 @@ export default function ArticleLabelMaker() {
     abstract: "",
   })
   const [csvResult, setCsvResult] = useState<{ filename: string; blob: Blob } | null>(null)
-  const [activeTab, setActiveTab] = useState("manual")
+  const [activeTab, setActiveTab] = useState("dashboard")
 
   const handleCsvFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -117,7 +118,11 @@ export default function ArticleLabelMaker() {
             </CardHeader>
             <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-blue-50">
+                <TabsList className="grid w-full grid-cols-3 bg-blue-50">
+                  <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </TabsTrigger>
                   <TabsTrigger value="csv" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
                     CSV Upload
                   </TabsTrigger>
@@ -128,6 +133,10 @@ export default function ArticleLabelMaker() {
                     Manual Input
                   </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="dashboard" className="space-y-6">
+                  <Dashboard />
+                </TabsContent>
 
                 <TabsContent value="csv" className="space-y-6">
                   {/* CSV Structure Information */}

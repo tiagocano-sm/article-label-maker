@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import pandas as pd
 
 
@@ -26,3 +26,26 @@ class ErrorResponse(BaseModel):
     """Schema for error responses"""
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Additional error details")
+
+
+class MetricsRequest(BaseModel):
+    """Schema for metrics calculation request"""
+    y_true: List[List[str]] = Field(..., description="True labels for each sample")
+    y_pred: List[List[str]] = Field(..., description="Predicted labels for each sample")
+
+
+class MetricsResponse(BaseModel):
+    """Schema for metrics response"""
+    overall_metrics: Dict[str, Any] = Field(..., description="Overall classification metrics")
+    overall_confusion_matrix: Dict[str, Any] = Field(..., description="Overall confusion matrix")
+    labels: List[str] = Field(..., description="List of all labels")
+    last_updated: str = Field(..., description="Last update timestamp")
+
+
+class DashboardResponse(BaseModel):
+    """Schema for dashboard data response"""
+    overall_metrics: Dict[str, Any] = Field(..., description="Overall metrics")
+    overall_confusion_matrix: Dict[str, Any] = Field(..., description="Overall confusion matrix")
+    labels: List[str] = Field(..., description="Available labels")
+    last_updated: str = Field(..., description="Last update timestamp")
+    has_data: bool = Field(..., description="Whether metrics data is available")

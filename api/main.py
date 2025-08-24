@@ -5,9 +5,13 @@ import tempfile
 import os
 from typing import List
 
-from schemas import ArticleRequest, ArticleResponse, CSVResponse, ErrorResponse
+from schemas import (
+    ArticleRequest, ArticleResponse, CSVResponse, ErrorResponse,
+    MetricsRequest, MetricsResponse, DashboardResponse
+)
 from services import ClassificationService
 from csv_processor import CSVProcessor
+from metrics_service import MetricsService
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -21,6 +25,7 @@ app = FastAPI(
 # Initialize services
 classification_service = ClassificationService()
 csv_processor = CSVProcessor()
+metrics_service = MetricsService()
 
 # Add CORS middleware
 app.add_middleware(
@@ -143,6 +148,79 @@ async def download_processed_csv(filename: str):
 async def health_check():
     """Health check endpoint for monitoring"""
     return {"status": "healthy", "service": "article-classification-api"}
+
+
+# Metrics endpoints
+@app.post("/calculate_metrics", response_model=MetricsResponse)
+async def calculate_metrics(request: MetricsRequest):
+    """
+    Calculate comprehensive metrics for multi-label classification
+    
+    Args:
+        request: MetricsRequest containing true and predicted labels
+        
+    Returns:
+        MetricsResponse with all calculated metrics
+    """
+    try:
+        metrics = metrics_service.update_metrics_from_predictions(request.y_true, request.y_pred)
+        return metrics_service.get_dashboard_data()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/dashboard", response_model=DashboardResponse)
+async def get_dashboard_data():
+    """
+    Get dashboard data with all metrics
+    
+    Returns:
+        DashboardResponse with formatted metrics for dashboard display
+    """
+    try:
+        dashboard_data = metrics_service.get_dashboard_data()
+        return DashboardResponse(**dashboard_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/metrics/overall")
+async def get_overall_metrics():
+    """
+    Get overall metrics only
+    
+    Returns:
+        Dictionary with overall metrics
+    """
+    try:
+        dashboard_data = metrics_service.get_dashboard_data()
+        if not dashboard_data.get("has_data"):
+            raise HTTPException(status_code=404, detail="No metrics data available")
+        
+        return dashboard_data.get("overall_metrics", {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
+@app.get("/metrics/confusion_matrix")
+async def get_overall_confusion_matrix():
+    """
+    Get overall confusion matrix
+    
+    Returns:
+        Dictionary with overall confusion matrix data
+    """
+    try:
+        dashboard_data = metrics_service.get_dashboard_data()
+        if not dashboard_data.get("has_data"):
+            raise HTTPException(status_code=404, detail="No metrics data available")
+        
+        return dashboard_data.get("overall_confusion_matrix", {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Error handlers
