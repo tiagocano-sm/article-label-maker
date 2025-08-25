@@ -1,17 +1,52 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import tempfile
+import logging
 import os
-from typing import List
+import tempfile
 
-from schemas import (
-    ArticleRequest, ArticleResponse, CSVResponse, ErrorResponse,
-    MetricsRequest, MetricsResponse, DashboardResponse
+import uvicorn
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+
+from app.config.schemas import (
+    ArticleRequest,
+    ArticleResponse,
+    CSVResponse,
+    DashboardResponse,
+    MetricsRequest,
+    MetricsResponse,
 )
-from services import ClassificationService
-from csv_processor import CSVProcessor
-from metrics_service import MetricsService
+from app.services.classification import ClassificationService
+from app.services.csv_processor import CSVProcessor
+from app.services.metrics_service import MetricsService
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "loggers": {
+        "uvicorn": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "my_app": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -244,3 +279,6 @@ async def general_exception_handler(request, exc):
             "detail": str(exc)
         }
     )
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_config=LOGGING_CONFIG, reload=True)

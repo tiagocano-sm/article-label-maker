@@ -2,8 +2,8 @@ import pandas as pd
 import tempfile
 import os
 from typing import List, Tuple
-from schemas import ArticleRequest, ArticleResponse
-from services import ClassificationService
+from app.config.schemas import ArticleRequest, ArticleResponse
+from app.services.classification import ClassificationService
 
 
 class CSVProcessor:

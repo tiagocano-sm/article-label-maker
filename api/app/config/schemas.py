@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-import pandas as pd
 
 
 class ArticleRequest(BaseModel):
@@ -49,3 +48,6 @@ class DashboardResponse(BaseModel):
     labels: List[str] = Field(..., description="Available labels")
     last_updated: str = Field(..., description="Last update timestamp")
     has_data: bool = Field(..., description="Whether metrics data is available")
+
+
+
