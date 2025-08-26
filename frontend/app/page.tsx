@@ -121,7 +121,7 @@ export default function ArticleLabelMaker() {
                 <TabsList className="grid w-full grid-cols-3 bg-blue-50">
                   <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
                     <BarChart3 className="w-4 h-4 mr-2" />
-                    Dashboard
+                    Dashboard(test)
                   </TabsTrigger>
                   <TabsTrigger value="csv" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
                     CSV Upload
