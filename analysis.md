@@ -202,5 +202,10 @@ To obtain real accuracy metrics, we would need:
 
 The implemented hybrid architecture allows us to take advantage of the best of both approaches according to the specific needs of each use case.
 
+## v0 visualization
+We used some prompts to create the ui but also modify some components using the design function and the code editor.
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
 ---
 
