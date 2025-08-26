@@ -9,7 +9,7 @@ class ClassificationService:
     def __init__(self):
         # Mock labels for demonstration - in a real app, this would be a trained model
         self.available_labels = settings.labels
-        self.classifier = get_classifier(settings.classifier_type)
+        self.classifier = get_classifier(settings.classifier_type)(device=settings.device)
 
     def classify_article(self, article: ArticleRequest) -> ArticleResponse:
         """
