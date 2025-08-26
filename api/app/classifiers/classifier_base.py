@@ -31,7 +31,7 @@ class ClassifierBase(ABC):
         self.model = None
         self.is_loaded = False
         self.config = kwargs
-        
+        self.local_model_path = None
         # Initialize logging
         self.logger = logger.getChild(self.__class__.__name__)
 
@@ -76,16 +76,6 @@ class ClassifierBase(ABC):
         """
         pass
     
-    @abstractmethod
-    def get_available_labels(self) -> List[str]:
-        """
-        Get the list of available classification labels.
-        
-        Returns:
-            List of possible class labels
-        """
-        pass
-    
     def is_model_ready(self) -> bool:
         """
         Check if the model is loaded and ready for inference.
@@ -112,8 +102,8 @@ class ClassifierBase(ABC):
             return ""
         
         # Basic preprocessing: strip whitespace and normalize and join title and abstract
-        text = text["title"] + "\n" + text["abstract"]
-        
+        text = text["title"].strip() + "\n" + text["abstract"].strip()
+        print(f"Preprocessed text: {text}")
         # Remove extra whitespace
         text = " ".join(text.split())
         
@@ -134,6 +124,10 @@ class ClassifierBase(ABC):
             "available_labels": self.get_available_labels() if self.is_model_ready() else [],
             "config": self.config
         }
+
+    def save_model(self):
+        if not Path(self.local_model_path).exists():
+            self.pipeline.save_pretrained(save_directory=self.local_model_path)
     
     def __enter__(self):
         """Context manager entry."""

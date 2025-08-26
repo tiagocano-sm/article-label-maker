@@ -21,9 +21,11 @@ class Settings(BaseSettings):
     """Settings for the application"""
 
     labels: List[str] = Field(description="Classification labels", default=Labels.get_labels())
-    classifier_type: str = Field(description="Classifier type", default="zero_shot")
+    classifier_type: str = Field(description="Classifier type", default="few_shot")
     device: str = Field(description="Device to run inference on", default="mps")
     threshold: float = Field(description="Threshold for classification", default=0.95)
+    local_model_path: str = Field(description="Path to local model", default="ai_models")
+    max_examples: int = Field(description="Maximum number of examples to use", default=3)
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
  
