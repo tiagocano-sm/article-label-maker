@@ -2,6 +2,185 @@
 
 A multi-label classification system for scientific articles built with modern web technologies and AI-powered development tools.
 
+## 🏗️ Backend Architecture
+
+```mermaid
+graph TB
+    subgraph "FastAPI Application"
+        A[main.py] --> B[FastAPI App]
+        B --> C[API Endpoints]
+        B --> D[Middleware]
+    end
+
+    subgraph "API Endpoints"
+        C --> E["/classify_article<br/>POST"]
+        C --> F["/classify_articles_in_csv<br/>POST"]
+        C --> G["/download/{filename}<br/>GET"]
+        C --> H["/health<br/>GET"]
+        C --> I["/warmup<br/>POST"]
+    end
+
+    subgraph "Services Layer"
+        J[ClassificationService] --> K[Classifier Factory]
+        L[CSVProcessor] --> M[Pandas Processing]
+        N[MetricsService] --> O[Analytics & Reporting]
+    end
+
+    subgraph "Classifier System"
+        K --> P[ClassifierBase]
+        P --> Q[ZeroShotClassifier]
+        P --> R[FewShotClassifier]
+        
+        Q --> S[GLiClass Model]
+        Q --> T[Transformers Pipeline]
+        
+        R --> U[Ollama Integration]
+        R --> V[Few-Shot Prompts]
+    end
+
+    subgraph "Configuration"
+        W[Settings] --> X[Environment Config]
+        Y[Schemas] --> Z[Data Validation]
+    end
+
+    subgraph "External Dependencies"
+        AA[Ollama Server] --> U
+        BB[HuggingFace Models] --> S
+        CC[CSV Files] --> M
+    end
+
+    %% Connections
+    E --> J
+    F --> L
+    G --> L
+    H --> J
+    I --> J
+    
+    J --> W
+    L --> Y
+    N --> Y
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style J fill:#e8f5e8
+    style P fill:#fff3e0
+    style W fill:#fce4ec
+```
+
+## 📁 Backend File Structure
+
+```mermaid
+graph TD
+    subgraph "API Root"
+        A[main.py] --> B[FastAPI Entry Point]
+        C[pyproject.toml] --> D[Dependencies]
+        E[Dockerfile] --> F[Container Config]
+    end
+
+    subgraph "App Package"
+        G[app/__init__.py] --> H[Package Root]
+        
+        subgraph "Classifiers"
+            I[classifiers/__init__.py] --> J[Classifier Factory]
+            K[classifier_base.py] --> L[Abstract Base Class]
+            M[zero_shot.py] --> N[GLiClass Implementation]
+            O[few_shot_prompting.py] --> P[Ollama Integration]
+            Q[few_shot_prompts.py] --> R[Prompt Templates]
+        end
+        
+        subgraph "Services"
+            S[services/__init__.py] --> T[Services Package]
+            U[classification.py] --> V[Classification Logic]
+            W[csv_processor.py] --> X[CSV Handling]
+            Y[metrics_service.py] --> Z[Analytics]
+        end
+        
+        subgraph "Configuration"
+            AA[config/__init__.py] --> BB[Config Package]
+            CC[settings.py] --> DD[App Settings]
+            EE[schemas.py] --> FF[Data Models]
+        end
+    end
+
+    subgraph "Data & Output"
+        GG[processed_csvs/] --> HH[Output Directory]
+        II[sample_articles.csv] --> JJ[Test Data]
+    end
+
+    %% Relationships
+    A --> G
+    G --> I
+    G --> S
+    G --> AA
+    
+    I --> K
+    I --> M
+    I --> O
+    I --> Q
+    
+    S --> U
+    S --> W
+    S --> Y
+    
+    AA --> CC
+    AA --> EE
+    
+    style A fill:#e1f5fe
+    style G fill:#f3e5f5
+    style I fill:#e8f5e8
+    style S fill:#fff3e0
+    style AA fill:#fce4ec
+```
+
+## 🔄 Classification Flow
+
+```mermaid
+flowchart TD
+    A[Client Request] --> B{Request Type}
+    
+    B -->|Single Article| C[POST /classify_article]
+    B -->|CSV File| D[POST /classify_articles_in_csv]
+    B -->|Health Check| E[GET /health]
+    B -->|Model Warmup| F[POST /warmup]
+    
+    C --> G[ClassificationService]
+    D --> H[CSVProcessor]
+    E --> I[Health Check]
+    F --> J[Model Warmup]
+    
+    G --> K{Classifier Type}
+    K -->|zero_shot| L[ZeroShotClassifier]
+    K -->|few_shot| M[FewShotClassifier]
+    
+    L --> N[GLiClass Model]
+    M --> O[Ollama API]
+    
+    N --> P[Transformers Pipeline]
+    O --> Q[LLM Generation]
+    
+    P --> R[Process Results]
+    Q --> R
+    
+    R --> S[Format Response]
+    S --> T[Return Labels]
+    
+    H --> U[Read CSV]
+    U --> V[Process Each Article]
+    V --> G
+    G --> W[Write Results]
+    W --> X[Return File]
+    
+    I --> Y[Check Services]
+    J --> Z[Load Model]
+    
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+    style L fill:#fff3e0
+    style M fill:#fff3e0
+    style N fill:#fce4ec
+    style O fill:#fce4ec
+```
+
 ## 🚀 Overview
 
 Article Label Maker is a full-stack application that classifies scientific articles into multiple categories using machine learning. The system provides both a web interface for manual article classification and batch processing capabilities for CSV files.
@@ -85,26 +264,12 @@ article-label-maker/
 - **Single Article**: Manual input of title and abstract
 - **Batch Processing**: Upload CSV files with multiple articles
 - **Multi-label Support**: Articles can belong to multiple categories
-- **Real-time Results**: Instant classification feedback
-
-### Model Performance Dashboard
-- **F1-Score**: Harmonic mean of precision and recall
-- **Precision**: Accuracy of positive predictions
-- **Overall Accuracy**: General model performance
-- **Confusion Matrix**: Visual breakdown of predictions
-- **Performance Metrics**: Detailed model evaluation
 
 ### Supported Categories
-- Machine Learning
-- Deep Learning
-- Computer Vision
-- Natural Language Processing
-- Data Science
-- Artificial Intelligence
-- Robotics
-- Neural Networks
-- Big Data
-- Cloud Computing
+- Cardiovascular
+- Neurological
+- Hepatorenal
+- Oncological
 
 ## 🔌 API Endpoints
 
@@ -117,15 +282,6 @@ article-label-maker/
 | `POST` | `/classify_article` | Classify single article | `ArticleRequest` | `ArticleResponse` |
 | `POST` | `/classify_articles_in_csv` | Process CSV file | `multipart/form-data` | `CSVResponse` |
 | `GET` | `/download/{filename}` | Download processed CSV | - | File download |
-
-### Metrics Endpoints
-
-| Method | Endpoint | Description | Response |
-|--------|----------|-------------|----------|
-| `GET` | `/dashboard` | Get all metrics data | `DashboardResponse` |
-| `GET` | `/metrics/overall` | Get overall metrics | Overall metrics object |
-| `GET` | `/metrics/confusion_matrix` | Get confusion matrix | Confusion matrix object |
-| `POST` | `/calculate_metrics` | Update metrics with new data | `MetricsResponse` |
 
 ## 👥 Authors
 
