@@ -17,6 +17,14 @@ const nextConfig = {
       },
     ]
   },
+  // Increase timeout for API calls
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
+  // Configure server timeout
+  serverRuntimeConfig: {
+    maxDuration: 300, // 5 minutes
+  },
 }
 
 export default nextConfig

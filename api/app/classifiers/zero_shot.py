@@ -43,7 +43,8 @@ class ZeroShotClassifier(ClassifierBase):
             **kwargs: Additional arguments passed to ClassifierBase
         """
         self.model_name = model_name
-        self.device = device or ("cuda:0" if torch.cuda.is_available() else "cpu")
+        # Force CPU for now to avoid MPS issues
+        self.device = "cpu"
         self.classification_type = classification_type
         self.threshold = threshold
         self.pipeline = None

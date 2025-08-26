@@ -87,6 +87,54 @@ async def root():
     }
 
 
+@app.get("/health", response_model=dict)
+async def health_check():
+    """Detailed health check endpoint"""
+    try:
+        # Check if classifier can be initialized
+        classification_service._ensure_classifier_loaded()
+        
+        return {
+            "status": "healthy",
+            "message": "API and classifier are ready",
+            "ollama_connected": True
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "message": f"Classifier initialization failed: {str(e)}",
+            "ollama_connected": False
+        }
+
+
+@app.post("/warmup", response_model=dict)
+async def warmup_model():
+    """Warmup endpoint to preload the model"""
+    try:
+        logger.info("Starting model warmup...")
+        
+        # Initialize classifier if not already done
+        classification_service._ensure_classifier_loaded()
+        
+        # Test with a simple prediction to warm up the model
+        test_article = ArticleRequest(
+            title="Test article for warmup",
+            abstract="This is a test article to warm up the model and ensure it's loaded in memory."
+        )
+        
+        result = classification_service.classify_article(test_article)
+        
+        logger.info("Model warmup completed successfully")
+        return {
+            "status": "success",
+            "message": "Model warmed up successfully",
+            "test_prediction": result.labels
+        }
+    except Exception as e:
+        logger.error(f"Model warmup failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Model warmup failed: {str(e)}")
+
+
 @app.post("/classify_article", response_model=ArticleResponse)
 async def classify_article(article: ArticleRequest):
     """
@@ -99,10 +147,22 @@ async def classify_article(article: ArticleRequest):
         ArticleResponse with title and predicted labels
     """
     try:
+        logger.info(f"Classifying article: {article.title[:50]}...")
         result = classification_service.classify_article(article)
+        logger.info(f"Classification completed successfully")
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Classification failed: {str(e)}")
+        # Return a more detailed error response
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Classification failed",
+                "detail": str(e),
+                "title": article.title,
+                "labels": []
+            }
+        )
 
 
 @app.post("/classify_articles_in_csv", response_model=CSVResponse)

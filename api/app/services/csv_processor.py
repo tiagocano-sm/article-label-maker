@@ -23,8 +23,10 @@ class CSVProcessor:
             Tuple of (output_file_path, number_of_processed_rows)
         """
         try:
+            print("LEYENDO CSV")
             # Read the CSV file
-            df = pd.read_csv(file_path)
+            df = pd.read_csv(file_path, delimiter=';')
+            print(df)
             
             # Validate required columns
             required_columns = ['title', 'abstract']

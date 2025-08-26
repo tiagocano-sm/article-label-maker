@@ -2,6 +2,9 @@ from typing import Dict, List
 from app.config.schemas import ArticleRequest, ArticleResponse
 from app.config.settings import settings
 from app.classifiers import get_classifier
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ClassificationService:
     """Service for article classification"""
@@ -9,7 +12,20 @@ class ClassificationService:
     def __init__(self):
         # Mock labels for demonstration - in a real app, this would be a trained model
         self.available_labels = settings.labels
-        self.classifier = get_classifier(settings.classifier_type)(device=settings.device)
+        self.classifier = None
+        self._classifier_initialized = False
+
+    def _ensure_classifier_loaded(self):
+        """Ensure the classifier is loaded (lazy initialization)"""
+        if not self._classifier_initialized:
+            try:
+                logger.info("Initializing classifier...")
+                self.classifier = get_classifier(settings.classifier_type)(device=settings.device)
+                self._classifier_initialized = True
+                logger.info("Classifier initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize classifier: {str(e)}")
+                raise
 
     def classify_article(self, article: ArticleRequest) -> ArticleResponse:
         """
@@ -21,8 +37,8 @@ class ClassificationService:
         Returns:
             ArticleResponse with title and predicted labels
         """
-        # Mock classification logic - in a real app, this would use a trained model
-        # labels = self._mock_classification(article.title, article.abstract)
+        # Ensure classifier is loaded
+        self._ensure_classifier_loaded()
 
         prediction = self.classifier.predict(
             content=article.model_dump(),

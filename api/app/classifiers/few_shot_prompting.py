@@ -26,7 +26,7 @@ class FewShotClassifier(ClassifierBase):
     def __init__(
         self,
         model_name: str = "llama3.1:8b",
-        ollama_base_url: str = "http://localhost:11434",
+        ollama_base_url: str = "http://ollama:11434",
         max_examples: int = 8,
         **kwargs
     ):
@@ -149,7 +149,7 @@ class FewShotClassifier(ClassifierBase):
             response = requests.post(
                 self.api_url,
                 json=payload,
-                timeout=60
+                timeout=300  # Increased timeout to 5 minutes for first inference
             )
             
             if response.status_code == 200:
